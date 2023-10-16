@@ -1,0 +1,22 @@
+{
+  "name": "flashmacrosserver",
+  "version": "1.0.0",
+  "description": "Server for FlashMacros",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nathaniel-Fernandes/FlashMacrosServer.git"
+  },
+  "author": "Nathaniel J. Fernandes",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/Nathaniel-Fernandes/FlashMacrosServer/issues"
+  },
+  "homepage": "https://github.com/Nathaniel-Fernandes/FlashMacrosServer#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
