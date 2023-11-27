@@ -1,10 +1,11 @@
 import express from 'express'
+import aesjs from 'aes-js'
 
 const app = express()
 app.use(express.json())
 const port = process.env.PORT || 3000
 
-// MiddleWare
+// 0. MiddleWare
 const LoginLogic = (req, res, next) => {
   if (!!req.query.token) {
     const isAuthenticated = (req.query.token === 'valid token') ? true : false
@@ -105,31 +106,15 @@ app.delete('/user/:user_id', LoginLogic, (req, res) => {
 
 })
 
-// Meal Related Routes
-app.get('/meal/:id', (req, res) => {
-
-})
-// app.get('/meal/:id') // read meal data (CMN, )      'title': '10/13/2023 6:53 PM',
-//       'description': 'Atlantic salmon with buttered corn and mashed potatoes',
-//       'CMNP': {
-//           'calories': 768,
-//           'proteins': 42,
-//           'fats': 31,
-//           'carbs': 56
-//       },
-//       'tags': ['Salmon', 'Corn', 'Mashed Potatoes'],
-//       'img': {
-//         'URI': require('../assets/salmon.jpg'),
-//         'width': 4032,
-//         'height': 3024
-//       }
-//   },
-
-//create
+// 2. Meal Related Routes
+// get a meal
 app.get('/meal/:id', LoginLogic, (req, res) => {
-  if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].includes(req.params.id)) {
-    if (req.query.user_id === '0' && ['0', '1', '2', '3', '4', '5'].includes(req.params.id)) {
-      res.status(200).send({
+  const mealExists = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].includes(req.params.id)
+
+  if (mealExists) {
+    const userHasAccess = (req.query.user_id === '0' && ['0', '1', '2', '3', '4', '5'].includes(req.params.id)) || (req.query.user_id === '1' && ['6', '7', '8', '9', '10'].includes(req.params.id))
+    if (userHasAccess) {
+      const dataFetched = req.query.user_id === '0' ? {
         'title': '10/13/2023 12:01 PM',
         'description': '',
         'CMNP': {
@@ -144,10 +129,7 @@ app.get('/meal/:id', LoginLogic, (req, res) => {
           'width': 3024,
           'height': 2830
         }
-      })
-    }
-    else if (req.query.user_id === '1' && ['6', '7', '8', '9', '10'].includes(req.params.id)) {
-      res.status(200).send({
+      } : {
         'title': '10/13/2023 6:53 PM',
         'description': 'Atlantic salmon with buttered corn and mashed potatoes',
         'CMNP': {
@@ -162,7 +144,9 @@ app.get('/meal/:id', LoginLogic, (req, res) => {
           'width': 4032,
           'height': 3024
         }
-      })
+      }
+
+      res.status(200).send(dataFetched)
     }
     else {
       res.sendStatus(403)
@@ -173,8 +157,11 @@ app.get('/meal/:id', LoginLogic, (req, res) => {
   }
 })
 
+// create a meal
 app.post('/meal/', LoginLogic, (req, res) => {
-  if (req.query?.user_id === '0') {
+  const savedDataSuccessfully = req.query?.user_id === '0' ? true : false
+
+  if (savedDataSuccessfully) {
     res.sendStatus(200)
   }
   else {
@@ -182,27 +169,242 @@ app.post('/meal/', LoginLogic, (req, res) => {
   }
 })
 
-app.post('/meal/:id') // update
+// update
+app.put('/meal/:id', LoginLogic, (req, res) => {
+  const userHasAccess = (req.query.user_id === '0' && ['0', '1', '2', '3', '4', '5'].includes(req.params.id)) || (req.query.user_id === '1' && ['6', '7', '8', '9', '10'].includes(req.params.id))
 
-app.delete('/meal/:id') // delete
+  if (userHasAccess) {
+    const updatedDataSuccessfully = ['1','2','6','7'].includes(req.params.id)
+
+    if (updatedDataSuccessfully) {
+      res.sendStatus(200)
+    }
+    else {
+      res.sendStatus(500)
+    }
+  }
+  else {
+    res.sendStatus(403)
+  }
+})
+
+app.delete('/meal/:id', (req, res) => {
+  const userHasAccess = (req.query.user_id === '0' && ['0', '1', '2', '3', '4', '5'].includes(req.params.id)) || (req.query.user_id === '1' && ['6', '7', '8', '9', '10'].includes(req.params.id))
+
+  if (userHasAccess) {
+    const deleteDataSuccessfully = ['1','2','6','7'].includes(req.params.id)
+
+    if (deleteDataSuccessfully) {
+      res.sendStatus(200)
+    }
+    else {
+      res.sendStatus(500)
+    }
+  }
+  else {
+    res.sendStatus(403)
+  }
+})
 
 // CGM data storage
-app.post('/cgm/') // create, must encrypt too
+// create, must encrypt too
+app.post('/cgm/', LoginLogic, (req, res) => {
+  if (!!req.body.data) {
+    var key = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ];
+ 
+    // The initialization vector (must be 16 bytes)
+    var iv = [ 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,35, 36 ];
+     
+    // Convert text to bytes
+    var text = JSON.stringify(req.body.data);
+    var textBytes = aesjs.utils.utf8.toBytes(text);
+     
+    var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
+    var encryptedBytes = aesOfb.encrypt(textBytes);
+     
+    // To print or store the binary data, you may convert it to hex
+    var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
 
-app.get('/viome/:id') // get
+    // When ready to decrypt the hex string, convert it back to bytes
+    var encryptedBytes = aesjs.utils.hex.toBytes(encryptedHex);
+     
+    // The output feedback mode of operation maintains internal state,
+    // so to decrypt a new instance must be instantiated.
+    var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
+    var decryptedBytes = aesOfb.decrypt(encryptedBytes);
+     
+    // Convert our bytes back into text
+    var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
 
-app.delete('/viome/:id') // delete
+    res.status(200).send({
+      'original': req.body.data,
+      'encrypted': encryptedHex,
+      'decrypted': JSON.parse(decryptedText)
+    })
+  }
+  else {
+    res.sendStatus(400)
+  }
+})
+
+app.delete('/cgm/:id', LoginLogic, (req, res) => {
+  const cgmDataExists = ['0', '1', '2'].includes(req.params.id) ? true : false
+
+  if (cgmDataExists) {
+    const userHasAccess = (req.query.user_id === '0' && ['0', '1'].includes(req.params.id)) || (req.query.user_id === '1' && req.params.id === '2')
+
+    if (userHasAccess) {
+        const deletedSuccessfully = (req.params.id === '0') ? true : false
+
+        if (deletedSuccessfully) {
+          res.sendStatus(200)
+        }
+        else {
+          res.sendStatus(500)
+        }
+    }
+    else {
+      res.sendStatus(403)
+    }
+  }
+  else {
+    res.sendStatus(404)
+  }
+})
+
+app.get('/cgm/:id', LoginLogic, (req, res) => {
+  const cgmDataExists = ['0', '1', '2'].includes(req.params.id) ? true : false
+
+  if (cgmDataExists) {
+    const userHasAccess = (req.query.user_id === '0' && ['0', '1'].includes(req.params.id)) || (req.query.user_id === '1' && req.params.id === '2')
+
+    if (userHasAccess) {
+        const fetchedSuccessfully = (req.params.id === '0') ? true : false
+
+        if (fetchedSuccessfully) {
+          const fetchedData = ['this', 'is', 'a', 'test', 'array']
+          var key = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ];
+ 
+          // The initialization vector (must be 16 bytes)
+          var iv = [ 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,35, 36 ];
+           
+          // Convert text to bytes
+          var text = JSON.stringify(fetchedData);
+          var textBytes = aesjs.utils.utf8.toBytes(text);
+           
+          var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
+          var encryptedBytes = aesOfb.encrypt(textBytes);
+           
+          // To print or store the binary data, you may convert it to hex
+          var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
+      
+          // When ready to decrypt the hex string, convert it back to bytes
+          var encryptedBytes = aesjs.utils.hex.toBytes(encryptedHex);
+           
+          // The output feedback mode of operation maintains internal state,
+          // so to decrypt a new instance must be instantiated.
+          var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
+          var decryptedBytes = aesOfb.decrypt(encryptedBytes);
+           
+          // Convert our bytes back into text
+          var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
+      
+          res.status(200).send({
+            'original': fetchedData,
+            'encrypted': encryptedHex,
+            'decrypted': JSON.parse(decryptedText)
+          })
+        }
+        else {
+          res.sendStatus(500)
+        }
+    }
+    else {
+      res.sendStatus(403)
+    }
+  }
+  else {
+    res.sendStatus(404)
+  }
+})
 
 // Viome data storage
-app.post('/viome/') // create
+app.post('/viome/', LoginLogic, (req, res) => {
+  if (!!req.body.data) {
+    const savedDataSuccessfully = (req.query.user_id == '0') ? true : false
 
-app.delete('/viome/:id') //delete
+    if (savedDataSuccessfully) {
+      res.sendStatus(200)
+    }
+    else {
+      res.sendStatus(500)
+    }
+  }
+  else {
+    res.sendStatus(400)
+  }
+})
 
-app.get('/viome/:id') // read
+app.delete('/viome/:id', LoginLogic, (req, res) => {
+  const viomeDataExists = ['0', '1', '2'].includes(req.params.id) ? true : false
+
+  if (viomeDataExists) {
+    const userHasAccess = (req.query.user_id === '0' && ['0', '1'].includes(req.params.id)) || (req.query.user_id === '1' && req.params.id === '2')
+
+    if (userHasAccess) {
+        const deletedSuccessfully = (req.params.id === '0') ? true : false
+
+        if (deletedSuccessfully) {
+          res.sendStatus(200)
+        }
+        else {
+          res.sendStatus(500)
+        }
+    }
+    else {
+      res.sendStatus(403)
+    }
+  }
+  else {
+    res.sendStatus(404)
+  }
+})
+
+app.get('/viome/:id', LoginLogic, (req, res) => {
+  const viomeDataExists = ['0', '1', '2'].includes(req.params.id) ? true : false
+
+  if (viomeDataExists) {
+    const userHasAccess = (req.query.user_id === '0' && ['0', '1'].includes(req.params.id)) || (req.query.user_id === '1' && req.params.id === '2')
+
+    if (userHasAccess) {
+        const fetchedSuccessfully = (req.params.id === '0') ? true : false
+        const fetchedData = [
+          ['Name', 'Type', 'Present?'],
+          ['Lactobacillus', 'Bacteria', '1'],
+          ['Streptococcus', 'Bacteria', '0']
+        ]
+
+        if (fetchedSuccessfully) {
+          res.status(200).send({ data: fetchedData})
+        }
+        else {
+          res.sendStatus(500)
+        }
+    }
+    else {
+      res.sendStatus(403)
+    }
+  }
+  else {
+    res.sendStatus(404)
+  }
+})
 
 // spawn C&MNP Cron job 
 app.post('/cmnp/', LoginLogic, (req, res) => {
-  if (req.query?.user_id === '0') {
+  const savedData = req.query?.user_id === '0' ? true : false
+
+  if (savedData) {
     res.sendStatus(200)
   }
   else {
