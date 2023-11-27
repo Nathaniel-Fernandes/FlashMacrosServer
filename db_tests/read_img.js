@@ -18,16 +18,3 @@ const { data, error } = await supabase
   })
 
 console.log(data)
-  
-// const { data, error } = await supabase
-//   .from('USERS')
-//   .insert([
-//     { USERNAME: 'test123', FIRST_NAME: 'Nathaniel', LAST_NAME: 'Fernandes' },
-//   ])
-//   .select()
-
-// let { data, error } = await supabase
-//   .from('CAL_MACRO_PREDICTION')
-//   .select('*')
-
-// console.log(data)
