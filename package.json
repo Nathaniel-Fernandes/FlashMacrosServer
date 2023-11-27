@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/Nathaniel-Fernandes/FlashMacrosServer#readme",
   "dependencies": {
+    "@supabase/supabase-js": "^2.38.1",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2"
-  }
+  },
+  "type": "module"
 }
