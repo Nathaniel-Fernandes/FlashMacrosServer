@@ -16,5 +16,3 @@ const { data, error } = await supabase
     offset: 0,
     sortBy: { column: 'name', order: 'asc' },
   })
-
-console.log(data)

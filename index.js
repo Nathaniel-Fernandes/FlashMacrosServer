@@ -239,7 +239,8 @@ app.post('/cgm/', LoginLogic, (req, res) => {
     res.status(200).send({
       'original': req.body.data,
       'encrypted': encryptedHex,
-      'decrypted': JSON.parse(decryptedText)
+      'decrypted': JSON.parse(decryptedText),
+      'encryptionKey': [key, iv]
     })
   }
   else {
