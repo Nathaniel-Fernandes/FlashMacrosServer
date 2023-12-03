@@ -46,7 +46,7 @@ const encryption = (object) => {
   return {
     original: object,
     encrypted: encryptedHex,
-    decrypted: decryptedText,
+    decrypted: JSON.parse(decryptedText),
     encryptionKey: [
       key,
       iv
