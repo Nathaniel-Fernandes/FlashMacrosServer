@@ -30,12 +30,37 @@ const LoginLogic = (req, res, next) => {
   }
 }
 
+const encryption = (object) => {
+  const key = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ];
+  const iv = [ 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,35, 36 ]; // The initialization vector (must be 16 bytes)
+  var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
+
+  var text = JSON.stringify(object);
+  var textBytes = aesjs.utils.utf8.toBytes(text);
+  var encryptedBytes = aesOfb.encrypt(textBytes);
+  var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
+
+  var decryptedBytes = aesOfb.decrypt(encryptedBytes);
+  var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
+
+  return {
+    original: object,
+    encrypted: encryptedHex,
+    decrypted: decryptedText,
+    encryptionKey: [
+      key,
+      iv
+    ]
+  }
+}
+
+
 // 1. User Related Routes
 // read user's details
 app.get('/user/:user_id', LoginLogic, (req, res) => {
   // [ECEN 404 TODO] Query the DB and check following
   // 1. Authentication: OAuth token is in DB (i.e., user is signed in)
-  // 2. Authorization: OAuth token matches User that has given ID (i.e., does user have permission to access data for )
+  // 2. Authorization: OAuth token matches User that has given ID (i.e., does user have permission to access data?)
   res.status(200).send({
     data: {
       name: 'Johanna Doe',
@@ -57,7 +82,7 @@ app.post('/user', (req, res) => {
     const savedSuccessfully = (req.query.username === 'save-succeeds') ? true : false
 
     if (savedSuccessfully) {
-      res.sendStatus(200)
+      res.status(200).send(encryption(req.query.password))
     }
     else {
       if (req.query.username === 'username-already-taken') {
@@ -81,6 +106,7 @@ app.put('/user/:user_id', LoginLogic, (req, res) => {
   if (!!req.body.data) {
     const savedSuccessfully = (req.body?.data.name === 'Johanna Doe') ? true : false
 
+    
     if (savedSuccessfully) {
       res.sendStatus(200)
     }
@@ -210,38 +236,7 @@ app.delete('/meal/:id', (req, res) => {
 // create, must encrypt too
 app.post('/cgm/', LoginLogic, (req, res) => {
   if (!!req.body.data) {
-    var key = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ];
- 
-    // The initialization vector (must be 16 bytes)
-    var iv = [ 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,35, 36 ];
-     
-    // Convert text to bytes
-    var text = JSON.stringify(req.body.data);
-    var textBytes = aesjs.utils.utf8.toBytes(text);
-     
-    var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
-    var encryptedBytes = aesOfb.encrypt(textBytes);
-     
-    // To print or store the binary data, you may convert it to hex
-    var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
-
-    // When ready to decrypt the hex string, convert it back to bytes
-    var encryptedBytes = aesjs.utils.hex.toBytes(encryptedHex);
-     
-    // The output feedback mode of operation maintains internal state,
-    // so to decrypt a new instance must be instantiated.
-    var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
-    var decryptedBytes = aesOfb.decrypt(encryptedBytes);
-     
-    // Convert our bytes back into text
-    var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
-
-    res.status(200).send({
-      'original': req.body.data,
-      'encrypted': encryptedHex,
-      'decrypted': JSON.parse(decryptedText),
-      'encryptionKey': [key, iv]
-    })
+    res.status(200).send(encryption(req.body.data))
   }
   else {
     res.sendStatus(400)
