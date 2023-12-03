@@ -33,14 +33,19 @@ const LoginLogic = (req, res, next) => {
 const encryption = (object) => {
   const key = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ];
   const iv = [ 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,35, 36 ]; // The initialization vector (must be 16 bytes)
-  var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
 
   var text = JSON.stringify(object);
   var textBytes = aesjs.utils.utf8.toBytes(text);
+
+  var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
   var encryptedBytes = aesOfb.encrypt(textBytes);
+
   var encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
 
+  
+  var aesOfb = new aesjs.ModeOfOperation.ofb(key, iv);
   var decryptedBytes = aesOfb.decrypt(encryptedBytes);
+
   var decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
 
   return {
@@ -53,7 +58,6 @@ const encryption = (object) => {
     ]
   }
 }
-
 
 // 1. User Related Routes
 // read user's details
@@ -130,6 +134,38 @@ app.delete('/user/:user_id', LoginLogic, (req, res) => {
     res.sendStatus(500)
   }
 
+})
+
+// delete user's profile information via GPDR compliance
+app.delete('/user/:user_id/gdpr', LoginLogic, (req, res) => {
+  const deletedSuccessfully = true
+
+  if (deletedSuccessfully) {
+    res.status(200).send('In compliance with GDPR regulations, we will delete all data kept about you barring info kept for legal reasons')
+  }
+  else {
+    res.sendStatus(500)
+  }
+})
+
+// delete user's profile information via GPDR compliance
+app.get('/user/:user_id/gdpr', LoginLogic, (req, res) => {
+
+  if (deletedSuccessfully) {
+    res.status(200).send(`This is all the data we keep about you: ${JSON.stringify({
+      name: 'Johanna Doe',
+      email: 'johanna@company.com',
+      heightFeet: '5',
+      heightInches: '5',
+      weight: '130',
+      race: 'White',
+      age: '27',
+      sex: 'F'
+    })}`)
+  }
+  else {
+    res.sendStatus(500)
+  }
 })
 
 // 2. Meal Related Routes
