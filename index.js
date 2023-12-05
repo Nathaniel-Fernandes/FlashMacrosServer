@@ -125,7 +125,7 @@ app.put('/user/:user_id', LoginLogic, (req, res) => {
 
 // delete user's profile information
 app.delete('/user/:user_id', LoginLogic, (req, res) => {
-  const deletedSuccessfully = (req.params.id === '0') ? true : false
+  const deletedSuccessfully = (req.params.user_id === '0') ? true : false
 
   if (deletedSuccessfully) {
     res.sendStatus(200)
@@ -150,8 +150,9 @@ app.delete('/user/:user_id/gdpr', LoginLogic, (req, res) => {
 
 // delete user's profile information via GPDR compliance
 app.get('/user/:user_id/gdpr', LoginLogic, (req, res) => {
+  const gotDataSuccessfully = true
 
-  if (deletedSuccessfully) {
+  if (gotDataSuccessfully) {
     res.status(200).send(`This is all the data we keep about you: ${JSON.stringify({
       name: 'Johanna Doe',
       email: 'johanna@company.com',
